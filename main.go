@@ -1,26 +1,23 @@
 package main
 
 import (
-	"github.com/gorilla/websocket"
+	"flag"
+	"log"
 
 	//"github.com/gorilla/websocket"
 	"net/http"
 )
 
-var upgrader = websocket.Upgrader{}
-
+var addr = flag.String("addr", ":8080", "http service address")
 func main() {
-	http.HandleFunc("/select", selectPort)
-	http.ListenAndServe(":8086", nil)
-}
-
-func selectPort(writer http.ResponseWriter, req *http.Request) {
-	var conn, _ = upgrader.Upgrade(writer, req, nil)
-
-	go func(conn *websocket.Conn) {
-		for {
-			mType, msg, _ := conn.ReadMessage()
-			conn.WriteMessage(mType, msg)
-		}
-	}(conn)
+	flag.Parse()
+	hub := newHub()
+	go hub.run()
+	http.HandleFunc("/ws",  func(w http.ResponseWriter, r *http.Request) {
+		serveWs(hub, w, r)
+	})
+	err := http.ListenAndServe(*addr, nil)
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
 }
