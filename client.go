@@ -6,6 +6,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -44,6 +45,11 @@ type Client struct {
 	// The websocket connection.
 	conn *websocket.Conn
 
+	//名称
+	name string
+
+	id string
+
 	// Buffered channel of outbound messages.
 	send chan []byte
 }
@@ -70,7 +76,10 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+
+		contentmsg := string(message)
+		contentmsg = contentmsg + c.name
+		c.hub.broadcast <- []byte(contentmsg)
 	}
 }
 
@@ -127,7 +136,15 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+
+	query := r.Header
+	name := query.Get("name")
+	id := query.Get("id")
+	if (len(name) == 0 || len(id) == 0) {
+		fmt.Fprint(w, "name或id不能为空")
+	}
+
+	client := &Client{hub: hub, conn: conn, name: name, id: id, send: make(chan []byte, 256)}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in
