@@ -4,6 +4,11 @@
 
 package main
 
+import (
+	"encoding/json"
+	"log"
+)
+
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
@@ -34,20 +39,66 @@ func (h *Hub) run() {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
+			//返回所有用户列表
+			list := make([]user, 0)
+			for client := range h.clients {
+				userObj := user{}
+				userObj.Id = client.id
+				userObj.Name = client.name
+				list = append(list, userObj)
+			}
+			for client := range h.clients {
+				dataObj := data{
+					DataType:    2,
+					DataContent: list,
+				}
+				usermsg, err := json.Marshal(dataObj)
+				if (err != nil) {
+					log.Printf("error : v%", err)
+					return
+				}
+				select {
+				case client.send <- usermsg:
+				default:
+					close(client.send)
+					delete(h.clients, client)
+				}
+				return
+			}
+
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
 			}
 		case message := <-h.broadcast:
-			for client := range h.clients {
-				select {
-				case client.send <- message:
-				default:
-					close(client.send)
-					delete(h.clients, client)
+			//此处增加过滤,如果指定了收件人，就选择对应的收件人，否则发给所有人
+			contentmsg := string(message)
+			msgObj := msg{}
+			json.Unmarshal([]byte(contentmsg), &msgObj)
+			if len(msgObj.ToId) == 0 {
+				for client := range h.clients {
+					select {
+					case client.send <- message:
+					default:
+						close(client.send)
+						delete(h.clients, client)
+					}
+				}
+			} else {
+				for client := range h.clients {
+					if client.id == msgObj.ToId {
+						select {
+						case client.send <- message:
+						default:
+							close(client.send)
+							delete(h.clients, client)
+						}
+						return
+					}
 				}
 			}
+
 		}
 	}
 }

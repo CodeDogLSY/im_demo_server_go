@@ -6,6 +6,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -77,9 +78,21 @@ func (c *Client) readPump() {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 
+		//向消息中添加发送人id name
 		contentmsg := string(message)
-		contentmsg = contentmsg + c.name
-		c.hub.broadcast <- []byte(contentmsg)
+		msgObj := msg{}
+		json.Unmarshal([]byte(contentmsg), &msgObj)
+		msgObj.FromId = c.id
+		msgObj.FromName = c.name
+		dataObj := data{
+			DataContent: msgObj,
+			DataType:    1,
+		}
+		result, err := json.Marshal(dataObj)
+		if err != nil {
+			log.Printf("error: %v", err)
+		}
+		c.hub.broadcast <- result
 	}
 }
 
@@ -152,3 +165,8 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	go client.writePump()
 	go client.readPump()
 }
+
+////返回所有用户
+//func returnAlluser(hub *Hub,w http.ResponseWriter, r *http.Request) {
+//
+//}
