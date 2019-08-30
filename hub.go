@@ -72,31 +72,39 @@ func (h *Hub) run() {
 		case message := <-h.broadcast:
 			//此处增加过滤,如果指定了收件人，就选择对应的收件人，否则发给所有人
 			contentmsg := string(message)
-			msgObj := msg{}
-			json.Unmarshal([]byte(contentmsg), &msgObj)
-			if len(msgObj.ToId) == 0 {
-				for client := range h.clients {
-					select {
-					case client.send <- message:
-					default:
-						close(client.send)
-						delete(h.clients, client)
-					}
-				}
-			} else {
-				for client := range h.clients {
-					if client.id == msgObj.ToId {
-						select {
-						case client.send <- message:
-						default:
-							close(client.send)
-							delete(h.clients, client)
+			dataObj := data{}
+			json.Unmarshal([]byte(contentmsg), &dataObj)
+			if dataObj.DataType==1 {
+				//tempContent := dataObj.DataContent.(string)
+				msgObg, ok := (dataObj.DataContent).(map[string]interface{})
+				if ok{
+					toid:= msgObg["to_id"]
+					to_id:= toid.(string)
+					if len(to_id) == 0 {
+						for client := range h.clients {
+							select {
+							case client.send <- message:
+							default:
+								close(client.send)
+								delete(h.clients, client)
+							}
 						}
-						return
+					} else {
+						for client := range h.clients {
+							if client.id == to_id {
+								select {
+								case client.send <- message:
+								default:
+									close(client.send)
+									delete(h.clients, client)
+								}
+								break
+							}
+						}
 					}
 				}
-			}
 
+			}
 		}
 	}
 }
