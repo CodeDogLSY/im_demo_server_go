@@ -6,6 +6,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/mitchellh/mapstructure"
 	"log"
 )
 
@@ -78,9 +79,13 @@ func (h *Hub) run() {
 				//tempContent := dataObj.DataContent.(string)
 				msgObg, ok := (dataObj.DataContent).(map[string]interface{})
 				if ok{
-					toid:= msgObg["to_id"]
-					to_id:= toid.(string)
-					if len(to_id) == 0 {
+					//toid:= msgObg["to_id"]
+					//to_id:= toid.(string)
+					var msgDemo msg
+					if err := mapstructure.Decode(msgObg,&msgDemo);err!=nil{
+						log.Printf("error : v%", err)
+					}
+					if len(msgDemo.ToId) == 0 {
 						for client := range h.clients {
 							select {
 							case client.send <- message:
@@ -91,7 +96,7 @@ func (h *Hub) run() {
 						}
 					} else {
 						for client := range h.clients {
-							if client.id == to_id {
+							if client.id == msgDemo.ToId {
 								select {
 								case client.send <- message:
 								default:
