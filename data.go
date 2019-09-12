@@ -17,3 +17,11 @@ type user struct {
 	Name string `json:"name"`
 	Id   string `json:"id"`
 }
+
+type MsgMap struct {
+	ToName   string `mapstructure:"to_name"`
+	ToId     string `mapstructure:"to_id"`
+	FromName string `mapstructure:"from_name"`
+	FromId   string `mapstructure:"from_id"`
+	Content  string `mapstructure:"content"`
+}
