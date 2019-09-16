@@ -1,16 +1,16 @@
 package main
 
 type msg struct {
-	ToName   string `json:"to_name"`
-	ToId     string `json:"to_id"`
-	FromName string `json:"from_name"`
-	FromId   string `json:"from_id"`
+	ToName   string `json:"toname"`
+	ToId     string `json:"toid"`
+	FromName string `json:"fromname"`
+	FromId   string `json:"fromid"`
 	Content  string `json:"content"`
 }
 
 type data struct {
-	DataType    int         `json:"data_type"` //数据类型 1为消息，2为用户列表
-	DataContent interface{} `json:"data_content"`
+	DataType    int         `json:"datatype"` //数据类型 1为消息，2为用户列表
+	DataContent interface{} `json:"datacontent"`
 }
 
 type user struct {
@@ -18,10 +18,10 @@ type user struct {
 	Id   string `json:"id"`
 }
 
-type MsgMap struct {
-	ToName   string `mapstructure:"to_name"`
-	ToId     string `mapstructure:"to_id"`
-	FromName string `mapstructure:"from_name"`
-	FromId   string `mapstructure:"from_id"`
-	Content  string `mapstructure:"content"`
-}
+//type MsgMap struct {
+//	ToName   string `mapstructure:"toname"`
+//	ToId     string `mapstructure:"toid"`
+//	FromName string `mapstructure:"fromname"`
+//	FromId   string `mapstructure:"fromid"`
+//	Content  string `mapstructure:"content"`
+//}

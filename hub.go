@@ -57,8 +57,8 @@ func (h *Hub) run() {
 				if ok{
 					//toid:= msgObg["to_id"]
 					//to_id:= toid.(string)
-					var msgDemo MsgMap
-					if err := mapstructure.WeakDecode(msgObg,&msgDemo);err!=nil{
+					var msgDemo msg
+					if err := mapstructure.Decode(msgObg,&msgDemo);err!=nil{
 						log.Printf("error : v%", err)
 					}
 					if len(msgDemo.ToId) == 0 {
